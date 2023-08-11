@@ -1342,26 +1342,6 @@ local function wait_until(f, timeout, step)
 end
 
 
-
---- Waits until no Lua error occurred
--- The check function will repeatedly be called (with a fixed interval), until
--- there is no Lua error occurred
---
--- NOTE: this is a regular Lua function, not a Luassert assertion.
--- @function pwait_until
--- @param f check function
--- @param timeout (optional) maximum time to wait after which an error is
--- thrown, defaults to 5.
--- @param step (optional) interval between checks, defaults to 0.05.
--- @return nothing. It returns when the condition is met, or throws an error
--- when it times out.
-local function pwait_until(f, timeout, step)
-  wait_until(function()
-    return pcall(f)
-  end, timeout, step)
-end
-
-
 --- Waits for invalidation of a cached key by polling the mgt-api
 -- and waiting for a 404 response. Throws an error on timeout.
 --
@@ -2732,78 +2712,6 @@ local function restart_kong(env, tables, fixtures)
 end
 
 
-local function wait_until_no_common_workers(workers, expected_total, strategy)
-  if strategy == "cassandra" then
-    ngx.sleep(0.5)
-  end
-  wait_until(function()
-    local pok, admin_client = pcall(admin_client)
-    if not pok then
-      return false
-    end
-    local res = assert(admin_client:send {
-      method = "GET",
-      path = "/",
-    })
-    luassert.res_status(200, res)
-    local json = cjson.decode(luassert.res_status(200, res))
-    admin_client:close()
-
-    local new_workers = json.pids.workers
-    local total = 0
-    local common = 0
-    if new_workers then
-      for _, v in ipairs(new_workers) do
-        total = total + 1
-        for _, v_old in ipairs(workers) do
-          if v == v_old then
-            common = common + 1
-            break
-          end
-        end
-      end
-    end
-    return common == 0 and total == (expected_total or total)
-  end, 30)
-end
-
-
-local function get_kong_workers()
-  local workers
-  wait_until(function()
-    local pok, admin_client = pcall(admin_client)
-    if not pok then
-      return false
-    end
-    local res = admin_client:send {
-      method = "GET",
-      path = "/",
-    }
-    if not res or res.status ~= 200 then
-      return false
-    end
-    local body = luassert.res_status(200, res)
-    local json = cjson.decode(body)
-
-    admin_client:close()
-    workers = json.pids.workers
-    return true
-  end, 10)
-  return workers
-end
-
-
---- Reload Kong and wait all workers are restarted.
-local function reload_kong(strategy, ...)
-  local workers = get_kong_workers()
-  local ok, err = kong_exec(...)
-  if ok then
-    wait_until_no_common_workers(workers, 1, strategy)
-  end
-  return ok, err
-end
-
-
 --- Simulate a Hybrid mode DP and connect to the CP specified in `opts`.
 -- @function clustering_client
 -- @param opts Options to use, the `host`, `port`, `cert` and `cert_key` fields
@@ -2941,7 +2849,6 @@ end
   grpc_client = grpc_client,
   http2_client = http2_client,
   wait_until = wait_until,
-  pwait_until = pwait_until,
   wait_pid = wait_pid,
   tcp_server = tcp_server,
   udp_server = udp_server,
@@ -2981,9 +2888,6 @@ end
   start_kong = start_kong,
   stop_kong = stop_kong,
   restart_kong = restart_kong,
-  reload_kong = reload_kong,
-  get_kong_workers = get_kong_workers,
-  wait_until_no_common_workers = wait_until_no_common_workers,
 
   start_grpc_target = start_grpc_target,
   stop_grpc_target = stop_grpc_target,

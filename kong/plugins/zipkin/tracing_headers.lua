@@ -248,6 +248,21 @@ local function parse_ot_headers(headers)
   return trace_id, span_id, should_sample
 end
 
+local function parse_tardis_headers(headers)
+  local warn = kong.log.warn
+
+  local tardis_id = headers["x-tardis-traceid"]
+  if tardis_id == nil then
+    return nil
+  end
+
+  if tardis_id and tardis_id:match("%X") then
+    warn("tardis_id header invalid; ignoring")
+    return nil
+  end
+
+  return tardis_id
+end
 
 local function parse_jaeger_trace_context_headers(jaeger_header)
   -- allow testing to spy on this.
@@ -257,11 +272,11 @@ local function parse_jaeger_trace_context_headers(jaeger_header)
     return nil, nil, nil, nil
   end
 
-  local trace_id, span_id, parent_id, trace_flags = match(jaeger_header, JAEGER_TRACECONTEXT_PATTERN)
+  local trace_id, span_id, parent_id, trace_flags = match(unescape_uri(jaeger_header), JAEGER_TRACECONTEXT_PATTERN)
 
   -- values are not parsable hexidecimal and therefore invalid.
   if trace_id == nil or span_id == nil or parent_id == nil or trace_flags == nil then
-    warn("invalid jaeger uber-trace-id header; ignoring.")
+    warn("invalid jaeger uber-trace-id header; ignoring. jaeger_header: " .. jaeger_header)
     return nil, nil, nil, nil
   end
 
@@ -329,7 +344,7 @@ local function find_header_type(headers)
   local b3_single_header = headers["b3"]
   if not b3_single_header then
     local tracestate_header = headers["tracestate"]
-    if tracestate_header then
+    if tracestate_header and type(tracestate_header) == "string" then
       b3_single_header = match(tracestate_header, "^b3=(.+)$")
     end
   end
@@ -371,7 +386,7 @@ local function parse(headers, conf_header_type)
 
   -- Check for B3 headers first
   local header_type, composed_header = find_header_type(headers)
-  local trace_id, span_id, parent_id, should_sample
+  local trace_id, span_id, parent_id, should_sample, tardis_id
 
   if header_type == "b3" or header_type == "b3-single" then
     trace_id, span_id, parent_id, should_sample = parse_zipkin_b3_headers(headers, composed_header)
@@ -383,8 +398,10 @@ local function parse(headers, conf_header_type)
     trace_id, parent_id, should_sample = parse_ot_headers(headers)
   end
 
+  tardis_id = parse_tardis_headers(headers)
+
   if not trace_id then
-    return header_type, trace_id, span_id, parent_id, should_sample
+    return header_type, trace_id, span_id, parent_id, should_sample, tardis_id
   end
 
   -- Parse baggage headers
@@ -397,10 +414,28 @@ local function parse(headers, conf_header_type)
     baggage = ot_baggage or jaeger_baggage or nil
   end
 
-
-  return header_type, trace_id, span_id, parent_id, should_sample, baggage
+  return header_type, trace_id, span_id, parent_id, should_sample, tardis_id, baggage
 end
 
+local function parse_business_headers(headers)
+  local request_id, business_context, correlation_id
+  request_id = headers["x-request-id"]
+  business_context = headers["x-business-context"]
+  correlation_id = headers["x-correlation-id"]
+  return request_id, business_context, correlation_id
+end
+
+local function parse_horizon_headers(headers)
+  local publisher, subscriber
+  publisher = headers["x-pubsub-publisher-id"]
+  subscriber = headers["x-pubsub-subscriber-id"]
+  return publisher, subscriber
+end
+
+local function set_tardis_id(tardis_id)
+  local set_header = kong.service.request.set_header
+  set_header("x-tardis-traceid", tardis_id)
+end
 
 local function set(conf_header_type, found_header_type, proxy_span, conf_default_header_type)
   local set_header = kong.service.request.set_header
@@ -412,7 +447,7 @@ local function set(conf_header_type, found_header_type, proxy_span, conf_default
      found_header_type ~= nil and
      conf_header_type ~= found_header_type
   then
-    kong.log.warn("Mismatched header types. conf: " .. conf_header_type .. ". found: " .. found_header_type)
+    kong.log.debug("Mismatched header types. conf: " .. conf_header_type .. ". found: " .. found_header_type)
   end
 
   found_header_type = found_header_type or conf_default_header_type or "b3"
@@ -475,5 +510,8 @@ end
 return {
   parse = parse,
   set = set,
+  set_tardis_id = set_tardis_id,
   from_hex = from_hex,
+  parse_business_headers = parse_business_headers,
+  parse_horizon_headers = parse_horizon_headers,
 }
