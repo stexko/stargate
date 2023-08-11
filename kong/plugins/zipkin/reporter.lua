@@ -21,8 +21,9 @@ local function ip_kind(addr)
 end
 
 
-local function new(http_endpoint, default_service_name, local_service_name)
+local function new(http_endpoint, local_component_name, default_service_name, local_service_name)
   return setmetatable({
+    local_component_name = local_component_name,
     default_service_name = default_service_name,
     local_service_name = local_service_name,
     http_endpoint = http_endpoint,
@@ -69,6 +70,10 @@ function zipkin_reporter_methods:report(span)
     zipkin_tags = nil
   end
 
+  local localEndpoint = {
+    serviceName = self.local_component_name or "kong"
+  }
+
   local zipkin_span = {
     traceId = to_hex(span.trace_id),
     name = span.name,
@@ -78,7 +83,7 @@ function zipkin_reporter_methods:report(span)
     timestamp = span.timestamp,
     duration = span.duration,
     -- shared = nil, -- We don't use shared spans (server reuses client generated spanId)
-    localEndpoint = { serviceName = self.local_service_name },
+    localEndpoint = localEndpoint,
     remoteEndpoint = remoteEndpoint,
     tags = zipkin_tags,
     annotations = span.annotations,
