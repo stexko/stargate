@@ -1,12 +1,12 @@
 include:
-  - project: 'dhei/teams/io/templates/gitlab-pipelines'
-    file: '/docker/gitlab-ci.docker.yml'
-    ref: develop
+  #- project: 'dhei/teams/io/templates/gitlab-pipelines'
+  #  file: '/docker/gitlab-ci.docker.yml'
+  #  ref: develop
   - template: Security/Dependency-Scanning.gitlab-ci.yml
 
 variables:
-  MTR_TARGET_IMAGE:   eni-kong-test
-  MTR_TARGET_TAG:     $CI_COMMIT_REF_NAME
+  MTR_TARGET_IMAGE:   eni-kong
+  MTR_TARGET_TAG:     ${CI_COMMIT_REF_NAME}-test
   TAG_SED_REGEX:      's,^.*/,,'
 
 stages:
@@ -22,7 +22,6 @@ default:
 semgrep:
   image: returntocorp/semgrep
   stage: test
-  when: manual
   script: semgrep ci --gitlab-sast > gl-sast-report.json || true
   rules:
   - changes:
