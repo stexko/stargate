@@ -63,8 +63,8 @@ build:image:
   script:
     - /kaniko/executor
       --registry-mirror dockerhub.devops.telekom.de
-      --context ./docker
-      --dockerfile ./docker/Dockerfile
+      --context ./
+      --dockerfile ./Dockerfile
       --destination ${MTR_DEVOPS_REGISTRY}/${MTR_DEVOPS_GROUP_INTERNAL}/${MTR_TARGET_IMAGE}:$(echo "${MTR_TARGET_TAG}" | sed -r 's/[/]/-/g')
       --cache=true --cache-repo ${MTR_DEVOPS_REGISTRY}/${MTR_DEVOPS_GROUP_INTERNAL}/${MTR_TARGET_IMAGE}:$(echo "${MTR_TARGET_TAG}" | sed -r 's/[/]/-/g')
       --build-arg http_proxy=$http_proxy
