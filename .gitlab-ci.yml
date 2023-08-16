@@ -5,7 +5,7 @@ include:
   - template: Security/Dependency-Scanning.gitlab-ci.yml
 
 variables:
-  MTR_TARGET_IMAGE:   eni-kong
+  MTR_TARGET_IMAGE:   eni-kong-test
   MTR_TARGET_TAG:     $CI_COMMIT_REF_NAME
   TAG_SED_REGEX:      's,^.*/,,'
 
@@ -46,7 +46,28 @@ semgrep:
     reports:
       sast: gl-sast-report.json
 
+#build:image:
+#  when: manual
+#  extends: .docker:build:mtr-devops-internal-with-tardis-common-and-dependencies
+#  stage: dockerize
+
 build:image:
   when: manual
-  extends: .docker:build:mtr-devops-internal-with-tardis-common-and-dependencies
-  stage: dockerize
+  image:
+    name: artifactory.devops.telekom.de/gcr.io/kaniko-project/executor:v1.6.0-debug
+    entrypoint: [ "" ]
+  tags: [ "otc_run_docker_k8s_m" ]
+  stage: package
+  before_script:
+    - mkdir -p /kaniko/.docker
+    - echo "{\"auths\":{\"${MTR_DEVOPS_REGISTRY}\":{\"username\":\"${MTR_DEVOPS_TARDIS_INTERNAL_PUSH_USER}\",\"password\":\"${MTR_DEVOPS_TARDIS_INTERNAL_PUSH_TOKEN}\"}}}" > /kaniko/.docker/config.json
+  script:
+    - /kaniko/executor
+      --registry-mirror dockerhub.devops.telekom.de
+      --context ./docker
+      --dockerfile ./docker/Dockerfile
+      --destination ${MTR_DEVOPS_REGISTRY}/${MTR_DEVOPS_GROUP_INTERNAL}/${MTR_TARGET_IMAGE}:$(echo "${MTR_TARGET_TAG}" | sed -r 's/[/]/-/g')
+      --cache=true --cache-repo ${MTR_DEVOPS_REGISTRY}/${MTR_DEVOPS_GROUP_INTERNAL}/${MTR_TARGET_IMAGE}:$(echo "${MTR_TARGET_TAG}" | sed -r 's/[/]/-/g')
+      --build-arg http_proxy=$http_proxy
+      --build-arg https_proxy=$https_proxy
+      --build-arg no_proxy=$no_proxy
