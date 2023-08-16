@@ -59,8 +59,7 @@ build:image:
   stage: dockerize
   before_script:
     - mkdir -p /kaniko/.docker
-    - echo "{\"auths\":{\"${MTR_DEVOPS_REGISTRY}/tardis-internal\":{\"username\":\"${MTR_DEVOPS_TARDIS_INTERNAL_PUSH_USER}\",\"password\":\"${MTR_DEVOPS_TARDIS_INTERNAL_PUSH_TOKEN}\"},{\"${MTR_DEVOPS_REGISTRY}/tardis-common\":{\"username\":\"${MTR_DEVOPS_TARDIS_COMMON_PUSH_USER}\",\"password\":\"${MTR_DEVOPS_TARDIS_COMMON_PUSH_TOKEN}\"}}}}" > /kaniko/.docker/config.json
-    - cat /kaniko/.docker/config.json
+    - echo "{\"auths\":{\"${MTR_DEVOPS_REGISTRY}/tardis-internal\":{\"username\":\"${MTR_DEVOPS_TARDIS_INTERNAL_PUSH_USER}\",\"password\":\"${MTR_DEVOPS_TARDIS_INTERNAL_PUSH_TOKEN}\"},\"${MTR_DEVOPS_REGISTRY}/tardis-common\":{\"username\":\"${MTR_DEVOPS_TARDIS_COMMON_PUSH_USER}\",\"password\":\"${MTR_DEVOPS_TARDIS_COMMON_PUSH_TOKEN}\"}}}" > /kaniko/.docker/config.json
   script:
     - /kaniko/executor
       --registry-mirror dockerhub.devops.telekom.de
