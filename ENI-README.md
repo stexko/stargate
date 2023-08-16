@@ -5,27 +5,26 @@ This is a mirrored repository of [Kong](https://github.com/Kong/kong). All branc
 **NOTE** Always take care of the MTR_TARGET_TAG variable naming!
 
 ## How to edit/implement files?
-We want to implement and extend plugins to our needs. Therefore we need a way to implement our changes but maintain the ability to update changes from Kong.\
-Therefore we use the following approach: all edits are solely done in release/eni-prefixed branches.\
+We aim to implement and expand plugins to align with our requirements. To achieve this, we must establish a method for incorporating our modifications while retaining the capacity to integrate updates from Kong.
 
-This means master has a eni-master equivalent.\
-Releases have a eni-release/x.x.x.x equivalent and released as x.x.x.x. The final x indicates the ENI-Version.
+Consequently, we have adopted the following strategy: all modifications are exclusively carried out within branches prefixed with "eni-" under the "release/".
 
-## Hot to build release?
-Create a release branch e.g. eni-release/2.8.1.4 from the eni-release/2.8.1.x branch. \
-If not set in gitlab-ci: Prepare a final release with setting MTR_TARGET_TAG to the proper image version, e.g. 2.8.1.4. \
-Increase the ENI version in kong/meta.lua. \
-Create a tag with the release name, e.g. 2.8.1.4. \
-Build the image by triggering the build job. \
-Delete the eni-release/2.8.1.4 branch.
+This implies that the "master" branch has an equivalent "eni-master" branch. Similarly, for each release, there exists a corresponding "eni-release/x.x.x.x" branch, which is eventually released as version "x.x.x.x". The last digit signifies the ENI-Version.
+
+## How to build release?
+1. Create a release branch named `eni-release/2.8.1.x` based on the `eni-release/2.8.1.x` branch.
+2. If it's not configured in your preferred pipeline configuration file, prepare the release by setting MTR_TARGET_TAG to the appropriate image version
+3. Update the ENI version within `kong/meta.lua`.
+4. Tag the release using the name.
+5. Initiate the image build by triggering the build job.
+6. Once done, delete the `eni-release/2.8.1.x` branch.
 
 ## How to update our sources?
-Release branches should not require updates from remote.\
-Eni-master can be updated via merge from master. This way we keep changes from us included and simultaneously updated.
+Release branches should not necessitate updates from the remote repository. On the other hand, "eni-master" can be kept up to date by merging changes from the "master" branch. This approach ensures that our modifications are retained while also staying current with updates.
 
-**NOTE:** There are a lot of merge conflicts coming from 2.8.1 onwards master. This means we need to reapply our changes on eni-master in a later stage.
+**NOTE:** Starting from version 2.8.1 onwards, numerous merge conflicts have arisen from the "master" branch. Consequently, we will need to reapply our modifications to "eni-master" at a subsequent stage.
 
 ## How to built hotfixes?
-There are two reasons to create a hotfix:
-1. If we have a bug in our code, we simply release e.g. eni-2.8.1.x version. Even if we break semver. \
-2. Bugfix-release from Kong: we simply create an release/eni-2.8.x version branch tag eni-2.8.1 as source. Merge new changes into the new branch.
+There are two reasons for creating a hotfix:
+1. In the event of a bug within our code, we can promptly address it by issuing a release such as "eni-2.8.1.x," even if this entails a departure from semantic versioning norms.
+2. When it comes to rectifying bugs in Kong's releases, the procedure involves generating a new branch named "release/eni-2.8.x," utilizing the tag "eni-2.8.1" as the point of origin. Subsequently, the latest modifications are merged into this newly created branch.
