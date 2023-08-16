@@ -57,7 +57,7 @@ build:image:
     name: artifactory.devops.telekom.de/gcr.io/kaniko-project/executor:v1.6.0-debug
     entrypoint: [ "" ]
   tags: [ "otc_run_docker_k8s_m" ]
-  stage: package
+  stage: dockerize
   before_script:
     - mkdir -p /kaniko/.docker
     - echo "{\"auths\":{\"${MTR_DEVOPS_REGISTRY}\":{\"username\":\"${MTR_DEVOPS_TARDIS_INTERNAL_PUSH_USER}\",\"password\":\"${MTR_DEVOPS_TARDIS_INTERNAL_PUSH_TOKEN}\"}}}" > /kaniko/.docker/config.json
