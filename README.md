@@ -15,6 +15,15 @@ Kong runs natively on Kubernetes thanks to its official [Kubernetes Ingress Cont
 
 ---
 
+# Fork Changes
+The following changes were made after the fork of Kong was created:
+* .gitlab-ci.yml was added for a GitLab Pipeline
+* Dockerfile was added to create a Docker image of Kong
+* ENI-README.md was added to show and tell how the branching, versioning and building works
+* ENI_CHANGELOG.md was added to track any changes that were done already
+
+# Kong
+
 ## Getting Started
 
 Let’s test drive Kong by adding authentication to an API in under 5 minutes.
