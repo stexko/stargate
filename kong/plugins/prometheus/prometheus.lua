@@ -767,11 +767,11 @@ local function register(self, name, help, label_names, buckets, typ, local_stora
     return
   end
 
-  local name_maybe_historgram = name:gsub("_bucket$", "")
+  local name_maybe_histogram = name:gsub("_bucket$", "")
                                     :gsub("_count$", "")
                                     :gsub("_sum$", "")
   if (typ ~= TYPE_HISTOGRAM and (
-      self.registry[name] or self.registry[name_maybe_historgram]
+      self.registry[name] or self.registry[name_maybe_histogram]
     )) or
     (typ == TYPE_HISTOGRAM and (
       self.registry[name] or

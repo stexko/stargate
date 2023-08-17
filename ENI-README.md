@@ -24,7 +24,7 @@ Release branches should not necessitate updates from the remote repository. On t
 
 **NOTE:** Starting from version 2.8.1 onwards, numerous merge conflicts have arisen from the "master" branch. Consequently, we will need to reapply our modifications to "eni-master" at a subsequent stage.
 
-## How to built hotfixes?
+## How to build hotfixes?
 There are two reasons for creating a hotfix:
 1. In the event of a bug within our code, we can promptly address it by issuing a release such as "eni-2.8.1.x," even if this entails a departure from semantic versioning norms.
 2. When it comes to rectifying bugs in Kong's releases, the procedure involves generating a new branch named "release/eni-2.8.x," utilizing the tag "eni-2.8.1" as the point of origin. Subsequently, the latest modifications are merged into this newly created branch.
